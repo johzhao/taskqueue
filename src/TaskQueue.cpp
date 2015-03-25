@@ -27,23 +27,21 @@ void TaskQueue::ExecuteQueue(void)
 	while (true)
 	{
 		pthread_mutex_lock(&m_queueMutex);
-		if (m_taskQueue.size() > 0)
+		if (m_taskQueue.size() == 0)
 		{
-			int nValue = m_taskQueue.front();
-			m_taskQueue.pop();
-			if (nValue == EndTaskQueueCommand)
-			{
-				std::cout << "Receive end command from thread " << pthread_self() << std::endl;
-				break;
-			}
-			else
-			{
-				std::cout << "Receive task: " << nValue << " from thread " << pthread_self() << std::endl;
-			}
+			pthread_cond_wait(&m_threadCond, &m_queueMutex);
+		}
+
+		int nValue = m_taskQueue.front();
+		m_taskQueue.pop();
+		if (nValue == EndTaskQueueCommand)
+		{
+			std::cout << "Receive end command from thread " << pthread_self() << std::endl;
+			break;
 		}
 		else
 		{
-			pthread_cond_wait(&m_threadCond, &m_queueMutex);
+			std::cout << "Receive task: " << nValue << " from thread " << pthread_self() << std::endl;
 		}
 		pthread_mutex_unlock(&m_queueMutex);
 	}
